@@ -41,6 +41,8 @@ class NewTransactionCreated implements ShouldBroadcast
             'amount' => $this->transaction->amount,
             'status' => $this->transaction->status,
             'created_at' => $this->transaction->created_at,
+            'currency' => $this->transaction->currency,
+            'receiver' => $this->transaction->receiver,
         ];
     }
 }

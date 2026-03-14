@@ -16,7 +16,9 @@ class ProcessNewTransaction implements ShouldQueue
 
     public function handle(): void
     {
-        $transaction = Transaction::create($this->transactionData);
+        $transaction = Transaction::with(['currency', 'receiver'])->find(
+            Transaction::create($this->transactionData)->id
+        );
 
         // Invalidate cached pages for this receiver so fresh data is served
         TransactionController::bustReceiverCache($transaction->receiver_id);
