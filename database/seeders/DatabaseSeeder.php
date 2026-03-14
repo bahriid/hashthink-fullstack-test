@@ -4,15 +4,20 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Kasra Nourani',
-            'email' => 'kasra@email.com',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'kasra@email.com'],
+            [
+                'name' => 'Kasra Nourani',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
 
         $this->call([
             CurrencySeeder::class,

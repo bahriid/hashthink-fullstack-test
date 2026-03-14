@@ -10,25 +10,37 @@ use Illuminate\Support\Str;
 
 class TransactionSeeder extends Seeder
 {
+    private static array $types = [
+        ['type' => 'Send Money', 'subtype' => 'International'],
+        ['type' => 'Send Money', 'subtype' => 'Domestic'],
+        ['type' => 'Add money', 'subtype' => null],
+        ['type' => 'Conversion', 'subtype' => null],
+    ];
+
+    private static array $statuses = ['pending', 'approved', 'success', 'cancelled', 'rejected'];
+
     public function run(): void
     {
         $receivers = Receiver::all();
         $currencies = Currency::all()->keyBy('code');
 
-        $types = [
-            ['type' => 'Send Money', 'subtype' => 'International'],
-            ['type' => 'Send Money', 'subtype' => 'Domestic'],
-            ['type' => 'Add money', 'subtype' => null],
-            ['type' => 'Conversion', 'subtype' => null],
-        ];
-
-        $statuses = ['pending', 'approved', 'success', 'cancelled', 'rejected'];
-
         foreach ($receivers as $receiver) {
             foreach ($currencies as $currency) {
-                $count = rand(3, 8);
+                // Skip if this receiver+currency combo already has transactions
+                if (Transaction::where('receiver_id', $receiver->id)
+                    ->where('currency_id', $currency->id)
+                    ->exists()) {
+                    continue;
+                }
+
+                $count = mt_rand(3, 8);
                 for ($i = 0; $i < $count; $i++) {
-                    $typeData = fake()->randomElement($types);
+                    $typeData = self::$types[array_rand(self::$types)];
+                    $status = self::$statuses[array_rand(self::$statuses)];
+                    $amount = number_format(mt_rand(50000, 8000000) / 100, 2, '.', '');
+                    $daysAgo = mt_rand(0, 180);
+                    $secondsAgo = mt_rand(0, 86400);
+
                     Transaction::create([
                         'receiver_id' => $receiver->id,
                         'currency_id' => $currency->id,
@@ -36,9 +48,9 @@ class TransactionSeeder extends Seeder
                         'type' => $typeData['type'],
                         'subtype' => $typeData['subtype'],
                         'to' => $receiver->name,
-                        'amount' => fake()->randomFloat(2, 500, 80000),
-                        'status' => fake()->randomElement($statuses),
-                        'created_at' => fake()->dateTimeBetween('-6 months', 'now'),
+                        'amount' => $amount,
+                        'status' => $status,
+                        'created_at' => now()->subDays($daysAgo)->subSeconds($secondsAgo),
                     ]);
                 }
             }
